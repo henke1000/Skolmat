@@ -42,7 +42,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: "Maträtt och vecka krävs." }, { status: 400 });
     }
 
-    const supabase = getSupabase();
+    const supabase = await getSupabase();
     const { error } = await supabase.from("meals").insert({ name, week });
 
     if (error) {

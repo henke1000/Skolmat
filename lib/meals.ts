@@ -2,7 +2,7 @@ import { getSupabase } from "@/lib/supabase";
 import type { Meal, MealWithVotes, Vote } from "@/lib/types";
 
 export async function getMeals() {
-  const supabase = getSupabase();
+  const supabase = await getSupabase();
   const { data, error } = await supabase
     .from("meals")
     .select("*")
@@ -28,7 +28,7 @@ export async function getCurrentWeekMeals() {
 }
 
 export async function getMealsWithVotes() {
-  const supabase = getSupabase();
+  const supabase = await getSupabase();
   const [{ data: meals, error: mealError }, { data: votes, error: voteError }] =
     await Promise.all([
       supabase.from("meals").select("*"),

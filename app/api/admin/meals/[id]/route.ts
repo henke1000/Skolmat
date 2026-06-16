@@ -15,7 +15,7 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
       return NextResponse.json({ message: "Fel admin-kod." }, { status: 401 });
     }
 
-    const supabase = getSupabase();
+    const supabase = await getSupabase();
     const { error } = await supabase.from("meals").delete().eq("id", params.id);
 
     if (error) {

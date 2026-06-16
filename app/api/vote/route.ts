@@ -18,7 +18,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: "Ogiltig röst." }, { status: 400 });
     }
 
-    const supabase = getSupabase();
+    const supabase = await getSupabase();
     const { error } = await supabase.from("votes").insert({
       meal_id: body.mealId,
       voter_id: body.voterId,
