@@ -1,15 +1,17 @@
 import { AppNav } from "@/components/AppNav";
+import { SetupError } from "@/components/SetupError";
 import { getMealsWithVotes } from "@/lib/meals";
 
 export const dynamic = "force-dynamic";
 
 export default async function TopplistaPage() {
-  const meals = await getMealsWithVotes();
+  try {
+    const meals = await getMealsWithVotes();
 
-  return (
-    <>
-      <AppNav />
-      <main className="mx-auto w-full max-w-5xl px-4 pb-10 sm:px-6">
+    return (
+      <>
+        <AppNav />
+        <main className="mx-auto w-full max-w-5xl px-4 pb-10 sm:px-6">
         <section className="py-8">
           <p className="text-sm font-black uppercase tracking-[0.18em] text-teal-700">Resultat</p>
           <h1 className="mt-2 text-4xl font-black text-slate-950 sm:text-5xl">Topplista</h1>
@@ -48,9 +50,17 @@ export default async function TopplistaPage() {
             </div>
           )}
         </div>
-      </main>
-    </>
-  );
+        </main>
+      </>
+    );
+  } catch (error) {
+    return (
+      <>
+        <AppNav />
+        <SetupError message={error instanceof Error ? error.message : "Okänt serverfel."} />
+      </>
+    );
+  }
 }
 
 function Stat({ label, value }: { label: string; value: string }) {
