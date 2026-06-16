@@ -27,17 +27,45 @@ export async function POST(request: Request) {
 
     if (error) {
       if (error.code === "23505") {
-        return NextResponse.json({ message: "Du har redan röstat på den här maträtten." }, { status: 409 });
+        return NextResponse.json(
+          { message: "Du har redan röstat på den här maträtten." },
+          {
+            status: 409,
+            headers: {
+              "Cache-Control": "no-store"
+            }
+          }
+        );
       }
 
-      return NextResponse.json({ message: error.message }, { status: 500 });
+      return NextResponse.json(
+        { message: error.message },
+        {
+          status: 500,
+          headers: {
+            "Cache-Control": "no-store"
+          }
+        }
+      );
     }
 
-    return NextResponse.json({ ok: true });
+    return NextResponse.json(
+      { ok: true },
+      {
+        headers: {
+          "Cache-Control": "no-store"
+        }
+      }
+    );
   } catch (error) {
     return NextResponse.json(
       { message: error instanceof Error ? error.message : "Kunde inte spara rösten." },
-      { status: 500 }
+      {
+        status: 500,
+        headers: {
+          "Cache-Control": "no-store"
+        }
+      }
     );
   }
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { Meal, VoteValue } from "@/lib/types";
 import { getOrCreateVoterId, hasLocalVote, rememberLocalVote } from "@/lib/voter";
 
@@ -10,17 +10,19 @@ type VoteDeckProps = {
 
 export function VoteDeck({ meals }: VoteDeckProps) {
   const [ready, setReady] = useState(false);
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [votedMealIds, setVotedMealIds] = useState<Set<string>>(new Set());
   const [dragX, setDragX] = useState(0);
   const [startX, setStartX] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState("");
+  const inFlightMealId = useRef<string | null>(null);
 
   const visibleMeals = useMemo(
-    () => (ready ? meals.filter((meal) => !hasLocalVote(meal.id)) : meals),
-    [meals, ready]
+    () => (ready ? meals.filter((meal) => !votedMealIds.has(meal.id) && !hasLocalVote(meal.id)) : meals),
+    [meals, ready, votedMealIds]
   );
-  const meal = visibleMeals[currentIndex];
+  const meal = visibleMeals[0];
+  const cardNumber = meals.length - visibleMeals.length + 1;
 
   useEffect(() => {
     getOrCreateVoterId();
@@ -28,33 +30,40 @@ export function VoteDeck({ meals }: VoteDeckProps) {
   }, []);
 
   async function submitVote(vote: VoteValue) {
-    if (!meal || isSubmitting) {
+    if (!meal || isSubmitting || inFlightMealId.current) {
       return;
     }
 
+    const votedMealId = meal.id;
+    inFlightMealId.current = votedMealId;
     setIsSubmitting(true);
     setMessage("");
 
-    const response = await fetch("/api/vote", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        mealId: meal.id,
-        voterId: getOrCreateVoterId(),
-        vote
-      })
-    });
+    try {
+      const response = await fetch("/api/vote", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          mealId: votedMealId,
+          voterId: getOrCreateVoterId(),
+          vote
+        })
+      });
 
-    if (response.ok || response.status === 409) {
-      rememberLocalVote(meal.id);
-      setCurrentIndex((index) => index + 1);
-      setDragX(0);
-    } else {
-      const body = (await response.json().catch(() => null)) as { message?: string } | null;
-      setMessage(body?.message ?? "Rösten kunde inte sparas just nu.");
+      if (response.ok || response.status === 409) {
+        rememberLocalVote(votedMealId);
+        setVotedMealIds((ids) => new Set(ids).add(votedMealId));
+        setDragX(0);
+      } else {
+        const body = (await response.json().catch(() => null)) as { message?: string } | null;
+        setMessage(body?.message ?? "Rösten kunde inte sparas just nu.");
+      }
+    } catch {
+      setMessage("Rösten kunde inte sparas just nu.");
+    } finally {
+      inFlightMealId.current = null;
+      setIsSubmitting(false);
     }
-
-    setIsSubmitting(false);
   }
 
   function endDrag() {
@@ -122,7 +131,7 @@ export function VoteDeck({ meals }: VoteDeckProps) {
         >
           <div className="flex items-center justify-between">
             <span className="rounded-full bg-amber-100 px-4 py-2 text-sm font-black text-amber-900">
-              Kort {currentIndex + 1}/{visibleMeals.length}
+              Kort {Math.min(cardNumber, meals.length)}/{meals.length}
             </span>
             <span className="text-5xl">🥗</span>
           </div>

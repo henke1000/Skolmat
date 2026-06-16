@@ -13,6 +13,7 @@ export function AdminPanel({ adminKey }: AdminPanelProps) {
   const [week, setWeek] = useState(getIsoWeek());
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const totalVotes = meals.reduce((sum, meal) => sum + meal.total, 0);
 
   async function loadMeals() {
     setIsLoading(true);
@@ -102,6 +103,7 @@ export function AdminPanel({ adminKey }: AdminPanelProps) {
       <section className="overflow-hidden rounded-[28px] bg-white shadow-soft">
         <div className="border-b border-slate-100 p-5">
           <h2 className="text-2xl font-black text-slate-950">Alla maträtter och röster</h2>
+          <p className="mt-1 text-sm font-bold text-slate-500">Totalt registrerade röster: {totalVotes}</p>
         </div>
 
         {isLoading ? (
@@ -115,7 +117,7 @@ export function AdminPanel({ adminKey }: AdminPanelProps) {
                 <div>
                   <h3 className="text-lg font-black text-slate-950">{meal.name}</h3>
                   <p className="text-sm font-bold text-slate-500">
-                    {meal.week} · ❤️ {meal.likes} · 👎 {meal.dislikes} · {meal.positivePercent}% positiva
+                    {meal.week} · totalt {meal.total} · ❤️ {meal.likes} · 👎 {meal.dislikes} · {meal.positivePercent}% positiva
                   </p>
                 </div>
                 <button
